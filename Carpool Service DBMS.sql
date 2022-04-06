@@ -1,0 +1,204 @@
+DROP TABLE Trips;
+DROP TABLE Promotion;
+DROP TABLE Rider;
+DROP TABLE CARS;
+DROP TABLE Driver;
+DROP TABLE AppUser;
+
+
+CREATE TABLE AppUser(
+UserID INT PRIMARY KEY
+);
+
+CREATE TABLE Driver(
+Rating DECIMAL(2,1),
+DOB VARCHAR2(10),
+Age INT CHECK (Age >= 21),
+EmployeeNum INT PRIMARY KEY REFERENCES AppUser(UserID) ON DELETE CASCADE,
+EmployeeName VARCHAR2(30)
+);
+
+CREATE TABLE Cars(
+LicensePlate VARCHAR2(8) PRIMARY KEY,
+Make VARCHAR2(20),
+Luxury VARCHAR2(1),
+CONSTRAINT CHK_BOOLEAN_VAL CHECK (Luxury IN ('1','0')),
+YearMade INTEGER CHECK(YearMade BETWEEN 2012 and 2022),
+CarCapacity INT,
+UsedBy INT REFERENCES Driver(EmployeeNum) ON DELETE CASCADE
+);
+
+CREATE TABLE Rider(
+RiderID INT PRIMARY KEY REFERENCES AppUser(UserID) ON DELETE CASCADE,
+RiderName VARCHAR2(20),
+RiderRating DECIMAL(2,1),
+PhoneNumber VARCHAR2(20)
+);
+
+CREATE TABLE Promotion(
+PromoCode VARCHAR2(10) PRIMARY KEY,
+PriceReduce INT,
+ClaimedBy REFERENCES Rider(RiderID) ON DELETE CASCADE
+);
+
+CREATE TABLE Trips(
+TripID INT PRIMARY KEY,
+Rider INT REFERENCES Rider(RiderID) ON DELETE CASCADE,
+Driver INT References Driver(EmployeeNum) ON DELETE CASCADE,
+PriceReduction VARCHAR2(10) DEFAULT 0 REFERENCES Promotion(PromoCode),
+Price INT,
+RideType VARCHAR(10),
+DistanceInKM DECIMAL(4,1),
+PromotionCode VARCHAR2(10) DEFAULT 0,
+
+originStreetAddress VARCHAR2(40),
+originCity VARCHAR2(20),
+originProvince VARCHAR2(20),
+originPostalCode VARCHAR2(10),
+
+finalStreetAddress VARCHAR2(40),
+finalCity VARCHAR2(20),
+finalProvince VARCHAR2(20),
+finalPostalCode VARCHAR2(10)
+);
+
+INSERT INTO AppUser(UserID) VALUES (282363);
+INSERT INTO AppUser(UserID) VALUES (282361);
+INSERT INTO AppUser(UserID) VALUES (541353);
+
+INSERT INTO AppUser(UserID) VALUES (222333);
+INSERT INTO AppUser(UserID) VALUES (444555);
+INSERT INTO AppUser(UserID) VALUES (666777);
+
+INSERT INTO Rider(RiderID,RiderName,PhoneNumber,RiderRating) VALUES (282363,'Mohamed','416-666-6666',4.2);
+INSERT INTO Rider(RiderID,RiderName,PhoneNumber,RiderRating) VALUES (282361,'Ahmed','416-666-5555',4.5);
+INSERT INTO Rider(RiderID,RiderName,PhoneNumber,RiderRating) VALUES (541353,'Youssef','416-666-4444',4.1);
+
+INSERT INTO Driver(EmployeeNum,EmployeeName,DOB,Rating,Age) VALUES (222333,'King','04/20/2001',3.2,31);
+INSERT INTO Driver(EmployeeNum,EmployeeName,DOB,Rating,Age) VALUES (444555,'Micheal','01/20/2001',3.5,25);
+INSERT INTO Driver(EmployeeNum,EmployeeName,DOB,Rating,Age) VALUES (666777,'Luis','05/21/2008',3.1,23);
+
+INSERT INTO Cars(LicensePlate,Make,Luxury,YearMade,CarCapacity,UsedBy) VALUES('BPTD123','Toyota','1',2018,5,222333);
+INSERT INTO Cars(LicensePlate,Make,Luxury,YearMade,CarCapacity,UsedBy) VALUES('ASKA213','Toyota','0',2019,5,444555);
+INSERT INTO Cars(LicensePlate,Make,Luxury,YearMade,CarCapacity,UsedBy) VALUES('KLOK331','Honda','0',2020,5,666777);
+
+INSERT INTO Promotion(PromoCode,PriceReduce,ClaimedBy) VALUES ('K98HMD42L9',20,282363);
+INSERT INTO Promotion(PromoCode,PriceReduce,ClaimedBy) VALUES ('A8GSSA7HK1',30,282361);
+INSERT INTO Promotion(PromoCode,PriceReduce,ClaimedBy) VALUES ('LK29AHSFK4',25,541353);
+
+INSERT INTO Trips(TripID,Rider,Driver,PriceReduction,Price,RideType,DistanceInKM,originStreetAddress,originCity,originProvince,originPostalCode,finalStreetAddress,finalCity,finalProvince,finalPostalCode) VALUES
+(817624,282363,222333,'K98HMD42L9',29,'X',3.32,'9102 Bird Lane','Oakville','ON','L5S 5K2','83 Saga Lane','Burlington','ON','L5F 5L3');
+INSERT INTO Trips(TripID,Rider,Driver,PriceReduction,Price,RideType,DistanceInKM,originStreetAddress,originCity,originProvince,originPostalCode,finalStreetAddress,finalCity,finalProvince,finalPostalCode) VALUES
+(817617,282361,444555,'A8GSSA7HK1',12,'X',3.42,'7812 Stokes Lane','Oakville','ON','L5S 5K2','8123 Stokes Lane','Burlington','ON','L5F 5L3');
+INSERT INTO Trips(TripID,Rider,Driver,PriceReduction,Price,RideType,DistanceInKM,originStreetAddress,originCity,originProvince,originPostalCode,finalStreetAddress,finalCity,finalProvince,finalPostalCode) VALUES
+(817626,541353,666777,'LK29AHSFK4',31,'X',3.12,'72  Lane','Oakville','ON','L5S 5K2','2491 Jok Lane','Burlington','ON','L5F 5L3');
+
+SELECT DISTINCT TripID,RiderRating
+FROM Trips,Driver,Rider
+WHERE DistanceInKM < 50
+AND RiderRating BETWEEN 3 AND 5;
+
+ALTER TABLE DRIVER RENAME COLUMN RATING TO DriverRating;
+
+SELECT PromoCode,PriceReduce
+FROM promotion
+WHERE promocode IS NOT NULL;
+
+SELECT MAX(YearMade)
+FROM Cars;
+
+SELECT MIN(YearMade)
+FROM Cars;
+
+SELECT UserID
+FROM AppUser
+ORDER BY UserID ASC;
+
+SELECT userid
+FROM appuser
+INNER JOIN rider
+ON appuser.userid = Rider.RiderId;
+
+SELECT userid
+FROM appuser
+INNER JOIN driver
+ON appuser.userid = Driver.EmployeeNum;
+
+SELECT * FROM Driver;
+SELECT * FROM AppUser;
+SELECT * FROM Rider;
+SELECT * FROM Trips;
+SELECT * FROM Promotion;
+SELECT * FROM Cars;
+
+
+DROP VIEW RIDES;
+DROP VIEW PROMO;
+DROP VIEW DRIVERUSERS;
+DROP VIEW RIDERUSERS;
+
+
+CREATE VIEW RIDES AS 
+SELECT Rider, Driver, RideType, Price, Make, LicensePlate
+FROM TRIPS,CARS
+WHERE Driver=CARS.USEDBY;
+
+
+CREATE VIEW PROMO AS 
+SELECT PROMOCODE,PRICEREDUCE,PRICE,RIDER
+FROM PROMOTION, TRIPS
+WHERE RIDER=PROMOTION.CLAIMEDBY;
+
+
+CREATE VIEW DRIVERUSERS AS
+SELECT USERID,EMPLOYEENAME, DRIVERRATING
+FROM APPUSER, DRIVER
+WHERE USERID=DRIVER.EMPLOYEENUM;
+
+
+CREATE VIEW RIDERUSERS AS
+SELECT RIDERRATING,RIDERNAME,USERID 
+FROM RIDER, APPUSER
+WHERE USERID=RIDER.RIDERID;
+
+
+SELECT PRICE,RIDER 
+FROM RIDES 
+WHERE Price>15 
+UNION SELECT PRICE,RIDER 
+FROM PROMO 
+WHERE PRICEREDUCE>10;
+
+SELECT USERID 
+FROM APPUSER 
+MINUS SELECT EMPLOYEENUM 
+FROM DRIVER;
+
+SELECT * FROM RIDES;
+SELECT * FROM PROMO;
+SELECT * FROM DRIVERUSERS;
+SELECT * FROM RIDERUSERS;
+
+
+SELECT COUNT(TripID)
+FROM TRIPS
+WHERE DRIVER <> 222333
+GROUP BY DRIVER;
+
+SELECT AVG(age)
+FROM driver;
+
+SELECT SUM(DistanceInKM)
+FROM TRIPS
+WHERE DRIVER=222333;
+
+SELECT SUM(PRICEREDUCE)
+FROM PROMOTION
+GROUP BY PRICEREDUCE
+HAVING PRICEREDUCE>5;
+
+SELECT LUXURY,YEARMADE,MAKE,LICENSEPLATE
+FROM CARS
+FULL JOIN TRIPS
+ON CARS.USEDBY=TRIPS.DRIVER
+WHERE DRIVER<>222333;
